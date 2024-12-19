@@ -1,0 +1,137 @@
+from datetime import datetime, timedelta
+
+# Base class for library items
+class LibraryItem:
+    def _init_(self, title, author, category):
+        self.title = title
+        self.author = author
+        self.category = category
+        self.checked_out = False
+        self.due_datetime = None
+        self.received_datetime = None
+
+    def checkout(self, received_datetime):
+        self.checked_out = True
+        self.received_datetime = received_datetime
+        self.due_datetime = received_datetime + timedelta(days=14)  # Assuming 14 days loan period
+
+    def return_item(self, return_datetime):
+        self.checked_out = False
+        self.due_datetime = None
+        self.received_datetime = None
+        return return_datetime
+
+# Specific classes for books, magazines, and DVDs
+class Book(LibraryItem):
+    def _init_(self, title, author):
+        super()._init_(title, author, "Book")
+
+class Magazine(LibraryItem):
+    def _init_(self, title, author):
+        super()._init_(title, author, "Magazine")
+
+class DVD(LibraryItem):
+    def _init_(self, title, author):
+        super()._init_(title, author, "DVD")
+
+# Library class to manage items
+class Library:
+    def _init_(self):
+        self.items = []
+
+    def add_item(self, item):
+        self.items.append(item)
+        print(f"Item '{item.title}' added to the library.")
+
+    def checkout_item(self, title):
+        for item in self.items:
+            if item.title == title and not item.checked_out:
+                received_datetime_str = input("Enter the received date and time (YYYY-MM-DD HH:MM:SS): ")
+                received_datetime = datetime.strptime(received_datetime_str, "%Y-%m-%d %H:%M:%S")
+                item.checkout(received_datetime)
+                print(f"{title} has been checked out. Received datetime: {received_datetime}, Due datetime: {item.due_datetime}")
+                return
+        print(f"{title} is not available for checkout.")
+
+    def return_item(self, title):
+        for item in self.items:
+            if item.title == title and item.checked_out:
+                return_datetime_str = input("Enter the return date and time (YYYY-MM-DD HH:MM:SS): ")
+                return_datetime = datetime.strptime(return_datetime_str, "%Y-%m-%d %H:%M:%S")
+                item.return_item(return_datetime)
+                print(f"{title} has been returned. Return datetime: {return_datetime}")
+                return
+        print(f"{title} was not checked out.")
+
+    def manage_fines(self):
+        current_datetime = datetime.now()
+        for item in self.items:
+            if item.checked_out and item.due_datetime < current_datetime:
+                overdue_days = (current_datetime - item.due_datetime).days
+                fine = overdue_days * 1  # Assuming fine is $1 per day
+                print(f"{item.title} is overdue by {overdue_days} days. Fine: ${fine:.2f}")
+
+    def search_items(self, search_term):
+        results = [item for item in self.items if search_term.lower() in item.title.lower() or search_term.lower() in item.author.lower() or search_term.lower() == item.category.lower()]
+        if results:
+            for item in results:
+                print(f"Title: {item.title}, Author: {item.author}, Category: {item.category}, Checked Out: {item.checked_out}")
+        else:
+            print("No items found.")
+
+def main():
+    library = Library()
+
+    while True:
+        print("\nLibrary Management System")
+        print("1. Add new item")
+        print("2. Checkout item")
+        print("3. Return item")
+        print("4. Manage overdue fines")
+        print("5. Search for items")
+        print("6. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == '1':
+            title = input("Enter title: ")
+            author = input("Enter author: ")
+            print("Choose category:")
+            print("1. Book")
+            print("2. Magazine")
+            print("3. DVD")
+            category_choice = input("Enter the number corresponding to the category: ")
+
+            if category_choice == '1':
+                library.add_item(Book(title, author))
+            elif category_choice == '2':
+                library.add_item(Magazine(title, author))
+            elif category_choice == '3':
+                library.add_item(DVD(title, author))
+            else:
+                print("Invalid category choice!")
+
+        elif choice == '2':
+            title = input("Enter the title of the item to checkout: ")
+            library.checkout_item(title)
+
+        elif choice == '3':
+            title = input("Enter the title of the item to return: ")
+            library.return_item(title)
+
+        elif choice == '4':
+            library.manage_fines()
+
+        elif choice == '5':
+            search_term = input("Enter the search term (title, author, or category): ")
+            library.search_items(search_term)
+
+        elif choice == '6':
+            print("Exiting the library management system.")
+            break
+
+        else:
+            print("Invalid choice! Please enter a number between 1 and 6.")
+
+if _name_ == "_main_":
+    main()
